@@ -3,7 +3,7 @@
 A two-player top-down adventure game. Goose and Pumpkin wander a meadow together.
 Built by Mason and his two sons, one Saturday feature at a time.
 
-**Play it here:** _(link appears once the first push to GitHub finishes)_
+**Play it here: https://masonlee01.github.io/goose-and-pumpkin/**
 
 ---
 
