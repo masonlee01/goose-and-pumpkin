@@ -15,7 +15,6 @@ _(pick one of these at the start of a session)_
 
 - [ ] Houses you can walk into
 - [ ] Something to collect, and a counter showing how many you have
-- [ ] Sound effects (a real honk)
 
 ## Ideas from the boys
 
@@ -39,3 +38,4 @@ _(pick one of these at the start of a session)_
 - [x] The camera follows both players and zooms out when they split up
 - [x] Honking (`F`) and boinging (`/`)
 - [x] Signposts you can read
+- [x] Sound effects (a real honk)

@@ -29,7 +29,14 @@ if (!executablePath) {
   process.exit(1);
 }
 
-const browser = await puppeteer.launch({ executablePath, headless: true, args: ['--no-sandbox'] });
+// --mute-audio silences the speakers but does NOT touch the browser's
+// autoplay policy - so this still genuinely tests whether real sound would
+// have been blocked, it just does it without making noise on your laptop.
+const browser = await puppeteer.launch({
+  executablePath,
+  headless: true,
+  args: ['--no-sandbox', '--mute-audio'],
+});
 const page = await browser.newPage();
 await page.setViewport({ width: 1280, height: 720 });
 
@@ -53,6 +60,8 @@ const state = () =>
       zoom: cam.zoom,
       shouts: w.children.list.filter((o) => o.type === 'Text' && /HONK|BOING/.test(o.text ?? ''))
         .length,
+      soundsPlayed: window.__soundsPlayed ?? [],
+      audioState: window.__audioState,
       uiTexts: window.__game.scene
         .getScene('UI')
         .children.list.flatMap((o) => (o.type === 'Container' ? o.list : [o]))
@@ -139,6 +148,14 @@ await hold(['KeyF'], 150);
 await wait(200);
 const honked = await state();
 check('Pressing F makes Goose honk', honked.shouts > 0);
+
+// --- 6b. A real sound plays, not just text ---
+check('Pressing F actually plays a honk sound', honked.soundsPlayed.includes('honk'));
+check(
+  "The browser's autoplay block did not silence it",
+  honked.audioState !== 'suspended',
+  `audioState=${honked.audioState}`,
+);
 
 // --- 7. Reading a sign ---
 await place([8, 15], [20, 12]);

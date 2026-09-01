@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { SHOUT_TIME, SHOW_NAME_TAGS, WALK_FRAME_RATE } from '../config';
+import { playSound } from '../systems/sounds';
 
 /**
  * One walking character. We make TWO of these: Goose and Pumpkin.
@@ -25,6 +26,7 @@ export type PlayerOptions = {
   speed: number;
   tagColour: string;
   shoutText: string;
+  soundName: string; // which SOUNDS entry in config.ts plays when they shout
 };
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
@@ -134,8 +136,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     return Phaser.Input.Keyboard.JustDown(this.controls.interact);
   }
 
-  /** Pop a word above their head for a moment. */
-  say(text: string = this.options.shoutText) {
+  /** Pop a word above their head for a moment, with a matching sound. */
+  say(text: string = this.options.shoutText, sound: string = this.options.soundName) {
+    playSound(sound);
     this.shout?.destroy();
     this.shout = this.scene.add
       .text(this.x, this.y - 20, text, {

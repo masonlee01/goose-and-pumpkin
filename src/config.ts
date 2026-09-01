@@ -24,6 +24,22 @@ export const HONK_TEXT = 'HONK!'; // what Goose shouts when you press F
 export const BOUNCE_TEXT = 'BOING!'; // what Pumpkin shouts when you press /
 export const SHOUT_TIME = 900; // how many milliseconds the shout stays on screen
 
+// --- Sound effects ------------------------------------------------------------
+// Every sound is invented on the spot by the computer - there are no sound
+// files anywhere in this project. Each one is a note that slides from pitch
+// `from` to pitch `to` (in Hertz - bigger number = higher note) over `time`
+// milliseconds, using a wave `shape` (try 'sine', 'square', 'sawtooth' or
+// 'triangle') at volume `loud` (0 = silent, 1 = full volume). Change a number,
+// press Ctrl+S, and the very next honk sounds different.
+//
+// This is deliberately NOT given a proper TypeScript type. That means a typo
+// here, like 'sqare' instead of 'square', can never stop the game from
+// building - it just quietly plays a normal square wave instead.
+export const SOUNDS = {
+  honk: { from: 220, to: 140, time: 220, shape: 'sawtooth', loud: 0.25 },
+  boing: { from: 300, to: 550, time: 180, shape: 'square', loud: 0.2 },
+};
+
 // --- The screen -------------------------------------------------------------
 export const GAME_WIDTH = 640; // the game is drawn this big, then stretched to fit
 export const GAME_HEIGHT = 360;

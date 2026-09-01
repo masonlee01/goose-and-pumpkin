@@ -38,6 +38,7 @@ export class WorldScene extends Phaser.Scene {
       speed: GOOSE_SPEED,
       tagColour: '#ffffff',
       shoutText: HONK_TEXT,
+      soundName: 'honk',
     });
 
     this.pumpkin = new Player(this, ...this.startPosition(20, 3), {
@@ -46,6 +47,7 @@ export class WorldScene extends Phaser.Scene {
       speed: PUMPKIN_SPEED,
       tagColour: '#ffc46b',
       shoutText: BOUNCE_TEXT,
+      soundName: 'boing',
     });
 
     for (const player of [this.goose, this.pumpkin]) {
