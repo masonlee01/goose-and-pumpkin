@@ -1,0 +1,8 @@
+# Keep line endings consistent between Windows here and Linux on GitHub.
+* text=auto eol=lf
+
+# These are pictures - never let git "fix" them.
+*.png binary
+
+# Batch files need Windows line endings or they misbehave.
+*.bat text eol=crlf

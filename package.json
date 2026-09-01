@@ -1,0 +1,25 @@
+{
+  "name": "goose-and-pumpkin",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "art": "node scripts/build-art.mjs",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "check": "tsc --noEmit",
+    "check:game": "node scripts/check-game.mjs",
+    "shot": "node scripts/screenshot.mjs"
+  },
+  "devDependencies": {
+    "pngjs": "^7.0.0",
+    "puppeteer-core": "^25.9.0",
+    "typescript": "~6.0.2",
+    "vite": "^8.2.2"
+  },
+  "dependencies": {
+    "phaser": "^3.90.0"
+  },
+  "description": "A two-player top-down adventure game, co-designed with two small boys."
+}

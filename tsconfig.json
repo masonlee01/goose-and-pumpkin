@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "target": "es2023",
+    "module": "esnext",
+    "lib": ["ES2023", "DOM"],
+    "types": ["vite/client"],
+    "allowArbitraryExtensions": true,
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+
+    /* Helpful checking. `strict` is what makes VS Code give good suggestions
+       and underline typos while you type. */
+    "strict": true,
+    "noFallthroughCasesInSwitch": true,
+
+    /* Deliberately OFF. A leftover unused variable is a completely normal
+       thing to have halfway through building a feature, and it must never be
+       allowed to stop the game running or block a deploy mid play-session. */
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "erasableSyntaxOnly": false
+  },
+  "include": ["src", "vite.config.ts"]
+}
