@@ -19,11 +19,11 @@ _(pick one of these at the start of a session)_
 
 ## Ideas from the boys
 
-_(their words, not tidied up)_
-
--
--
--
+- [ ] Switching from day to night by "honking" in front of a polar bear
+- [ ] add paranha plants
+- [ ] fish in the water
+- [ ] the goose can swim in the water, the pumpkin sinks under (sprite changes to air bubbles)
+- [ ] worms that walk around the map slowly and leave mud "poop" trails that slowly disappear
 
 ## Ideas from Dad
 
