@@ -63,6 +63,12 @@ export const LEGEND: Record<string, TileKind> = {
 
   // --- decoration you can walk straight over ---
   m: { ground: GRASS_TUFTY, object: MUSHROOMS, name: 'mushrooms' },
+
+  // --- lamp shades: WorldScene stands a real sprite on top of these, because
+  //     a sprite can bob and pop and a tilemap tile cannot. These letters just
+  //     say what plain ground goes underneath it. ---
+  L: { ground: GRASS_TUFTY, name: 'grass with a lamp shade' },
+  l: { ground: WATER_SPARKLY, water: true, name: 'floating lamp shade' },
 };
 
 /** The letter we fall back to if a map uses a letter that is not in the legend. */

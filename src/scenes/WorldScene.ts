@@ -10,6 +10,12 @@ import {
   GOOSE_SPEED,
   GOOSE_SWIM_SPEED,
   HONK_TEXT,
+  LAMP_SHADE_BOB_HEIGHT,
+  LAMP_SHADE_BOB_TIME,
+  LAMP_SHADE_FOUND_TEXT,
+  LAMP_SHADE_POP_TIME,
+  LAMP_SHADE_SPARKLE_COUNT,
+  LAMP_SHADES_ALL_FOUND_TEXT,
   PUMPKIN_SPEED,
   TILE_SIZE,
 } from '../config';
@@ -23,6 +29,9 @@ export class WorldScene extends Phaser.Scene {
   private pumpkin!: Player;
   private followCamera!: TwoPlayerCamera;
   private waterSystem!: WaterSystem;
+  private lampShades: Phaser.Physics.Arcade.Sprite[] = [];
+  private lampShadesFound = 0;
+  private lampShadesTotal = 0;
 
   constructor() {
     super('World');
@@ -64,6 +73,7 @@ export class WorldScene extends Phaser.Scene {
     this.setUpControls();
 
     this.waterSystem = new WaterSystem(this, this.map, this.goose, this.pumpkin);
+    this.spawnLampShades();
 
     this.followCamera = new TwoPlayerCamera(this, [this.goose, this.pumpkin]);
     this.followCamera.setBounds(this.map.widthInPixels, this.map.heightInPixels);
@@ -132,5 +142,110 @@ export class WorldScene extends Phaser.Scene {
       const y = sign.down * TILE_SIZE + TILE_SIZE / 2;
       return Phaser.Math.Distance.Between(player.x, player.y, x, y) < READING_DISTANCE;
     });
+  }
+
+  // ---------------------------------------------------------------------
+  // Lamp shades: something to find, with a shared counter.
+  //
+  // The World -> UI contract, in one place so it never drifts out of date:
+  //
+  //   Event on `world.events` | Args           | When
+  //   ------------------------|----------------|----------------------------
+  //   show-message            | text           | reading a sign, or finding
+  //                           |                | the very last lamp shade
+  //   lamp-shades              | found, total   | a lamp shade is picked up
+  //
+  // WorldScene.create() finishes before UIScene.create() runs, so anything
+  // emitted while the world is being built is shouted into an empty room.
+  // UIScene therefore PULLS the opening numbers via getLampShadeCounts() when
+  // it wakes, and LISTENS for `lamp-shades` after that for updates.
+  // ---------------------------------------------------------------------
+
+  /** L and l in the map become sprites, not tiles, because only a sprite can bob and pop. */
+  private spawnLampShades() {
+    const spots = [...this.map.spotsOf('L'), ...this.map.spotsOf('l')];
+    this.lampShadesTotal = spots.length;
+
+    for (const spot of spots) {
+      const x = spot.across * TILE_SIZE + TILE_SIZE / 2;
+      const y = spot.down * TILE_SIZE + TILE_SIZE / 2;
+      const shade = this.physics.add.sprite(x, y, 'lampshade').setDepth(6);
+
+      // Bob up and down, and pulse a little bigger and smaller, forever.
+      this.tweens.add({
+        targets: shade,
+        y: y - LAMP_SHADE_BOB_HEIGHT,
+        scale: 1.15,
+        duration: LAMP_SHADE_BOB_TIME,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+      });
+
+      this.lampShades.push(shade);
+    }
+
+    // overlap, not collider - you walk straight over a lamp shade to grab it.
+    this.physics.add.overlap(
+      [this.goose, this.pumpkin],
+      this.lampShades,
+      (playerObj, shadeObj) => {
+        this.collectLampShade(playerObj as Player, shadeObj as Phaser.Physics.Arcade.Sprite);
+      },
+      undefined,
+      this,
+    );
+  }
+
+  /** Called whenever the game notices someone standing on a lamp shade. */
+  private collectLampShade(player: Player, shade: Phaser.Physics.Arcade.Sprite) {
+    // The overlap callback fires every single frame you stand on it - this is
+    // what stops one lamp shade being counted over and over.
+    if (!shade.active) return;
+    shade.disableBody(true, false); // stop it overlapping again, but keep it visible for the pop tween
+
+    this.lampShadesFound++;
+    player.say(LAMP_SHADE_FOUND_TEXT, 'pickup');
+    this.sparkle(shade.x, shade.y);
+
+    this.tweens.add({
+      targets: shade,
+      scale: 0,
+      alpha: 0,
+      duration: LAMP_SHADE_POP_TIME,
+      ease: 'Back.easeIn',
+      onComplete: () => {
+        shade.destroy();
+        const index = this.lampShades.indexOf(shade);
+        if (index !== -1) this.lampShades.splice(index, 1);
+      },
+    });
+
+    this.events.emit('lamp-shades', this.lampShadesFound, this.lampShadesTotal);
+    if (this.lampShadesFound === this.lampShadesTotal) {
+      this.events.emit('show-message', LAMP_SHADES_ALL_FOUND_TEXT);
+    }
+  }
+
+  /** A little ring of sparkles where a lamp shade was just found - no particle system needed. */
+  private sparkle(x: number, y: number) {
+    for (let i = 0; i < LAMP_SHADE_SPARKLE_COUNT; i++) {
+      const angle = (i / LAMP_SHADE_SPARKLE_COUNT) * Math.PI * 2;
+      const dot = this.add.rectangle(x, y, 2, 2, 0xfff6d8).setDepth(31);
+      this.tweens.add({
+        targets: dot,
+        x: x + Math.cos(angle) * 14,
+        y: y + Math.sin(angle) * 14,
+        alpha: 0,
+        duration: 400,
+        ease: 'Quad.easeOut',
+        onComplete: () => dot.destroy(),
+      });
+    }
+  }
+
+  /** What UIScene reads when it wakes up, to draw the counter's opening numbers. */
+  getLampShadeCounts() {
+    return { found: this.lampShadesFound, total: this.lampShadesTotal };
   }
 }

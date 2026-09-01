@@ -28,6 +28,9 @@ export class BootScene extends Phaser.Scene {
       frameWidth: TILE_SIZE,
       frameHeight: TILE_SIZE,
     });
+
+    // A lamp shade to find - just one picture, it doesn't walk anywhere.
+    this.load.image('lampshade', 'assets/sprites/lampshade.png');
   }
 
   create() {

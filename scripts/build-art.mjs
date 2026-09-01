@@ -38,6 +38,9 @@ const C = {
   waterMid: '#3f93d9',
   waterLight: '#68b3e8',
   waterFoam: '#bfe3f7',
+  lampShade: '#f5e6c8',
+  lampShadeShade: '#e0c896',
+  lampShadeRim: '#c9a45e',
 };
 
 // ---------------------------------------------------------------------------
@@ -278,6 +281,29 @@ function drawPumpkinBubbles(step) {
 }
 
 // ---------------------------------------------------------------------------
+// LAMP SHADE - a little cream cone shape, something to spot and collect
+// ---------------------------------------------------------------------------
+function drawLampshade() {
+  const c = new Canvas(TILE, TILE);
+  const top = 4;
+  const bottom = 13;
+  const cx = 8;
+
+  // the cone, one row at a time, narrow at the top and wide at the bottom
+  for (let y = top; y <= bottom; y++) {
+    const t = (y - top) / (bottom - top);
+    const halfWidth = 3 + t * 3;
+    c.rect(Math.round(cx - halfWidth), y, Math.round(halfWidth * 2), 1, C.lampShade);
+  }
+
+  c.rect(6, 6, 2, 5, C.lampShadeShade); // a shaded stripe down one side
+  c.ellipse(cx, bottom, 6, 1.2, C.lampShadeRim); // the darker rim at the bottom
+
+  c.addOutline();
+  return c;
+}
+
+// ---------------------------------------------------------------------------
 // WATER - Kenney's Tiny Town pack has no water, so we draw our own
 // ---------------------------------------------------------------------------
 function drawWater(variant) {
@@ -345,6 +371,7 @@ console.log('Drawing the pictures for Goose and Pumpkin...');
 save(buildFavicon(), 'public/favicon.png');
 save(buildCharacterSheet(drawGoose, drawGooseSwimming), 'public/assets/sprites/goose.png');
 save(buildCharacterSheet(drawPumpkin, drawPumpkinBubbles), 'public/assets/sprites/pumpkin.png');
+save(drawLampshade(), 'public/assets/sprites/lampshade.png');
 const built = buildTileset();
 save(built.sheet, 'public/assets/tiles/tileset.png');
 console.log(

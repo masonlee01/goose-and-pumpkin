@@ -9,6 +9,8 @@
  */
 import puppeteer from 'puppeteer-core';
 import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const URL = process.env.CHECK_URL ?? 'http://localhost:5173/';
 const BROWSERS = [
@@ -235,7 +237,55 @@ check(
   read.uiTexts.join(' | ').slice(0, 60),
 );
 
-// --- 8. Nothing exploded along the way ---
+// --- 9. Lamp shades: something to find, and a counter that counts itself ---
+const lampShadeLetterCount = (() => {
+  const mapPath = path.join(path.dirname(fileURLToPath(import.meta.url)), '../src/world/maps/meadow.txt');
+  const rows = fs
+    .readFileSync(mapPath, 'utf8')
+    .split(/\r?\n/)
+    .filter((line) => !line.trimStart().startsWith('#') && line.trim().length > 0);
+  return rows.join('').split('').filter((ch) => ch === 'L' || ch === 'l').length;
+})();
+
+const lampState = () =>
+  page.evaluate(() => {
+    const w = window.__game.scene.getScene('World');
+    return { found: w.lampShadesFound ?? 0, total: w.lampShadesTotal ?? 0 };
+  });
+
+const beforeLamp = await lampState();
+check(
+  'The lamp shade total matches the letters in meadow.txt',
+  beforeLamp.total === lampShadeLetterCount,
+  `game total=${beforeLamp.total}, file total=${lampShadeLetterCount}`,
+);
+
+// The only lamp shade in the starting map floats in the middle of the pond -
+// only Goose can reach it. Start him right next to it, in the water already.
+await place([23, 6], [18, 12]);
+await hold(['KeyD'], 900);
+await wait(400);
+const afterLamp = await lampState();
+const lampUi = await state();
+check(
+  'Walking onto a lamp shade increments the counter and plays a sound',
+  afterLamp.found === beforeLamp.found + 1 && lampUi.soundsPlayed.includes('pickup'),
+  `found ${beforeLamp.found} -> ${afterLamp.found}`,
+);
+check(
+  'The lamp shade counter is shown on screen',
+  lampUi.uiTexts.some((t) => /Lamp shades:/.test(t)),
+  lampUi.uiTexts.join(' | ').slice(0, 60),
+);
+if (afterLamp.total > 0 && afterLamp.found === afterLamp.total) {
+  check(
+    'Collecting every lamp shade shows the well-done message',
+    lampUi.uiTexts.some((t) => /WELL DONE/i.test(t)),
+    lampUi.uiTexts.join(' | ').slice(0, 80),
+  );
+}
+
+// --- 10. Nothing exploded along the way ---
 check('No errors in the browser console', errors.length === 0, errors.slice(0, 2).join(' / '));
 
 await browser.close();

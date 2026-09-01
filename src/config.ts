@@ -30,6 +30,14 @@ export const SINK_TIME = 500; // milliseconds it takes Pumpkin to sink out of si
 export const POP_TIME = 600; // milliseconds she stays out of sight before popping back up
 export const PHEW_TEXT = 'PHEW!'; // what Pumpkin shouts when she pops back up on the bank
 
+// --- Lamp shades: something to find, and a counter for how many you've got --
+export const LAMP_SHADE_FOUND_TEXT = 'GOT ONE!'; // shouted when you walk onto a lamp shade
+export const LAMP_SHADES_ALL_FOUND_TEXT = 'FOUND ALL THE\nLAMP SHADES!\nWELL DONE!'; // shown when the very last one is found
+export const LAMP_SHADE_BOB_HEIGHT = 3; // how many pixels a lamp shade bobs up and down
+export const LAMP_SHADE_BOB_TIME = 900; // milliseconds for one up-and-down bob
+export const LAMP_SHADE_POP_TIME = 300; // milliseconds the pop-and-vanish animation takes when you grab one
+export const LAMP_SHADE_SPARKLE_COUNT = 7; // how many little sparkles ring a lamp shade when you grab it
+
 // --- Sound effects ------------------------------------------------------------
 // Every sound is invented on the spot by the computer - there are no sound
 // files anywhere in this project. Each one is a note that slides from pitch
@@ -45,6 +53,7 @@ export const SOUNDS = {
   honk: { from: 220, to: 140, time: 220, shape: 'sawtooth', loud: 0.25 },
   boing: { from: 300, to: 550, time: 180, shape: 'square', loud: 0.2 },
   phew: { from: 500, to: 750, time: 150, shape: 'sine', loud: 0.2 },
+  pickup: { from: 500, to: 900, time: 200, shape: 'triangle', loud: 0.22 },
 };
 
 // --- The screen -------------------------------------------------------------

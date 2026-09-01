@@ -14,7 +14,6 @@ when they are in the game.
 _(pick one of these at the start of a session)_
 
 - [ ] Houses you can walk into
-- [ ] Something to collect, and a counter showing how many you have
 
 ## Ideas from the boys
 
@@ -39,3 +38,4 @@ _(pick one of these at the start of a session)_
 - [x] Signposts you can read
 - [x] Sound effects (a real honk)
 - [x] the goose can swim in the water, the pumpkin sinks under (sprite changes to air bubbles)
+- [x] Something to collect, and a counter showing how many you have (lamp shades)
