@@ -17,10 +17,6 @@ _(pick one of these at the start of a session)_
 
 ## Ideas from the boys
 
-- [ ] add paranha plants
-- [ ] fish in the water
-- [ ] worms that walk around the map slowly and leave mud "poop" trails that slowly disappear
-
 ## Ideas from Dad
 
 - [ ] A second map, through a door or off the edge of the meadow
@@ -39,3 +35,6 @@ _(pick one of these at the start of a session)_
 - [x] the goose can swim in the water, the pumpkin sinks under (sprite changes to air bubbles)
 - [x] Something to collect, and a counter showing how many you have (lamp shades)
 - [x] Switching from day to night by "honking" in front of a polar bear
+- [x] fish in the water
+- [x] worms that walk around the map slowly and leave mud "poop" trails that slowly disappear
+- [x] add paranha plants

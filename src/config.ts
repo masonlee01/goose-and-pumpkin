@@ -43,6 +43,32 @@ export const BEAR_HONK_DISTANCE = 28; // how close you need to stand to honk at 
 export const NIGHT_ALPHA = 0.6; // how dark it gets at night (0 = no change, 1 = pitch black)
 export const NIGHT_FADE_TIME = 800; // milliseconds the day/night transition takes
 
+// --- Fish, swimming around in the pond ----------------------------------------
+export const WATER_TILES_PER_FISH = 6; // roughly one fish for every this-many pond squares
+export const FISH_SPEED = 20; // how fast a fish drifts along
+export const FISH_SCARE_DISTANCE = 24; // how close a player needs to get before a fish darts off
+export const FISH_COLOURS = [0xffffff, 0xff8a3d, 0x4fc3f7, 0xffd54f, 0xba68c8]; // setTint colours - a better knob than more frames
+
+// --- Worms, wandering the grass and leaving mud trails ------------------------
+export const WORM_COUNT = 6; // how many worms wander the meadow
+export const WORM_SPEED = 12; // worms are slow - they are worms
+export const WORM_MIN_TURN_TIME = 1500; // shortest time before a worm picks a new direction
+export const WORM_MAX_TURN_TIME = 4000; // longest time before a worm picks a new direction
+export const MUD_SPLAT_MIN_INTERVAL = 2000; // shortest time between one mud splat and the next
+export const MUD_SPLAT_MAX_INTERVAL = 5000; // longest time between one mud splat and the next
+export const MUD_SPLAT_LIFETIME = 6000; // how long a splat sits there before it starts fading
+export const MUD_SPLAT_FADE_TIME = 1500; // how long the fade-out takes
+export const MAX_MUD_PATCHES = 30; // caps the trail so a long afternoon of play does not slow the game down
+
+// --- Piranha plants, hiding in their mud pots ----------------------------------
+export const PIRANHA_DOWN_TIME = 2500; // how long a plant hides before popping up
+export const PIRANHA_UP_TIME = 1500; // how long it stays up once it appears
+export const PIRANHA_WARN_TIME = 400; // how long it peeks out before snapping - your warning to run
+export const PIRANHA_SHOVE_DISTANCE = 24; // how far you get shoved when one gets you
+export const PIRANHA_SHOVE_TIME = 200; // milliseconds the shove takes
+export const PIRANHA_SAFE_TIME = 1000; // milliseconds of safety after a bite, so two plants can't volley you back and forth
+export const PIRANHA_OW_TEXT = 'OW!'; // what you shout when a piranha plant gets you
+
 // --- Sound effects ------------------------------------------------------------
 // Every sound is invented on the spot by the computer - there are no sound
 // files anywhere in this project. Each one is a note that slides from pitch
@@ -60,6 +86,7 @@ export const SOUNDS = {
   phew: { from: 500, to: 750, time: 150, shape: 'sine', loud: 0.2 },
   pickup: { from: 500, to: 900, time: 200, shape: 'triangle', loud: 0.22 },
   growl: { from: 150, to: 90, time: 260, shape: 'sawtooth', loud: 0.25 },
+  ow: { from: 200, to: 120, time: 150, shape: 'sawtooth', loud: 0.22 },
 };
 
 // --- The screen -------------------------------------------------------------

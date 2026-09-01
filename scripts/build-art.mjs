@@ -3,10 +3,11 @@
  *
  * Run it with:   npm run art
  *
- * It makes three things inside public/assets/ :
- *   tiles/tileset.png     - the ground/trees/houses, plus water that we drew ourselves
+ * It makes several pictures inside public/assets/ :
+ *   tiles/tileset.png     - the ground/trees/houses, plus water and the mud pot we drew ourselves
  *   sprites/goose.png     - Goose, in all his walking poses
  *   sprites/pumpkin.png   - Pumpkin, in all her rolling poses
+ *   sprites/fish.png, worm.png, mud.png, piranha.png - the pond and meadow creatures
  *
  * WANT TO CHANGE A COLOUR? Look for the COLOURS section a few lines down.
  * Change a colour, save, then run "npm run art" and everything is redrawn.
@@ -44,6 +45,16 @@ const C = {
   bearBody: '#f7f7f2',
   bearShade: '#dcdcd2',
   bearNose: '#2d1b2e',
+  fishBody: '#f2f2f2', // pale and plain on purpose - FISH_COLOURS in config.ts tints it with setTint
+  fishEye: '#2d1b2e',
+  wormBody: '#c97b8a',
+  wormEye: '#2d1b2e',
+  mud: '#5c4326',
+  potClay: '#a8622f',
+  potRim: '#7a4620',
+  piranhaStem: '#4a9b3c',
+  piranhaBody: '#d4453f',
+  piranhaMouth: '#7a1f1c',
 };
 
 // ---------------------------------------------------------------------------
@@ -333,6 +344,95 @@ function drawBear() {
 }
 
 // ---------------------------------------------------------------------------
+// FISH - a tiny fish that drifts around the pond. Drawn pale and plain on
+// purpose: FISH_COLOURS in config.ts recolours it with setTint at runtime,
+// which is a much better knob than drawing a different picture per colour.
+// ---------------------------------------------------------------------------
+function drawFish(step) {
+  const c = new Canvas(8, 8);
+  const wiggle = step === 1 ? 1 : -1;
+
+  c.ellipse(4.5, 4, 2.4, 1.6, C.fishBody);
+  c.rect(0, 3 + (wiggle > 0 ? 1 : 0), 2, 2, C.fishBody); // tail, flicking up and down
+  c.set(6, 3, C.fishEye);
+
+  c.addOutline();
+  return c;
+}
+
+// ---------------------------------------------------------------------------
+// WORM - a little wiggly line of body segments, crawling across the grass
+// ---------------------------------------------------------------------------
+function drawWorm(step) {
+  const c = new Canvas(16, 16);
+  const wave = step === 1 ? 1 : 0;
+
+  for (let i = 0; i < 6; i++) {
+    const x = 3 + i * 1.8;
+    const y = 8 + (i % 2 === 0 ? wave : -wave);
+    c.ellipse(x, y, 1.5, 1.3, C.wormBody);
+  }
+  c.set(13, 7, C.wormEye);
+
+  c.addOutline();
+  return c;
+}
+
+// ---------------------------------------------------------------------------
+// MUD - a fading splat a worm leaves behind. No outline: it is a stain on
+// the ground, not a thing standing on it.
+// ---------------------------------------------------------------------------
+function drawMud(variant) {
+  const c = new Canvas(8, 8);
+  const blobs = [
+    [[3, 4, 2, 1.4], [5.5, 3, 1, 0.8]],
+    [[4, 4, 2.2, 1.2], [1.8, 5, 0.9, 0.7], [6, 3, 0.8, 0.6]],
+    [[3, 3, 1.6, 1.2], [5, 5, 1.6, 1.1]],
+  ][variant];
+  for (const [x, y, rx, ry] of blobs) c.ellipse(x, y, rx, ry, C.mud);
+  return c;
+}
+
+// ---------------------------------------------------------------------------
+// MUD POT - the little pot a piranha plant hides in. This one goes into the
+// TILESET (it is a permanent part of the map), not its own sprite sheet -
+// unlike the plant itself, which pops up and down and needs to be a sprite.
+// ---------------------------------------------------------------------------
+function drawMudPot() {
+  const c = new Canvas(TILE, TILE);
+  c.ellipse(8, 13, 5, 2.5, C.potRim);
+  c.rect(4, 9, 8, 5, C.potClay);
+  c.ellipse(8, 9, 4, 1.6, C.potRim);
+  c.addOutline();
+  return c;
+}
+
+// ---------------------------------------------------------------------------
+// PIRANHA PLANT - pops up out of its pot and snaps. Frame 0 is a peeking bud
+// (the warning before it snaps), frames 1 and 2 are the mouth wide open
+// (alternated for a little chomping animation), frame 3 is it closing back up.
+// ---------------------------------------------------------------------------
+function drawPiranha(frame) {
+  const c = new Canvas(TILE, TILE);
+
+  if (frame === 0) {
+    c.rect(7, 10, 2, 5, C.piranhaStem);
+    c.ellipse(8, 9, 2.2, 1.8, C.piranhaBody);
+  } else if (frame === 3) {
+    c.rect(7, 9, 2, 6, C.piranhaStem);
+    c.ellipse(8, 8, 2, 1.7, C.piranhaBody);
+  } else {
+    const openness = frame === 1 ? 3.3 : 2.9;
+    c.rect(7, 10, 2, 5, C.piranhaStem);
+    c.ellipse(8, 6, openness, 3, C.piranhaBody);
+    c.ellipse(8, 6.5, openness - 1.2, 1.6, C.piranhaMouth);
+  }
+
+  c.addOutline();
+  return c;
+}
+
+// ---------------------------------------------------------------------------
 // WATER - Kenney's Tiny Town pack has no water, so we draw our own
 // ---------------------------------------------------------------------------
 function drawWater(variant) {
@@ -376,8 +476,18 @@ function buildTileset() {
   const firstCustom = baseRows * cols; // 132
   drawWater(0).blitTo(sheet, 0 * TILE, baseRows * TILE); // tile 132
   drawWater(1).blitTo(sheet, 1 * TILE, baseRows * TILE); // tile 133
+  drawMudPot().blitTo(sheet, 2 * TILE, baseRows * TILE); // tile 134
 
   return { sheet, cols, firstCustom };
+}
+
+// ---------------------------------------------------------------------------
+// Put a character's animation frames into a single strip, left to right.
+// ---------------------------------------------------------------------------
+function buildStrip(drawFn, frameCount, frameSize) {
+  const sheet = new Canvas(frameSize * frameCount, frameSize);
+  for (let i = 0; i < frameCount; i++) drawFn(i).blitTo(sheet, i * frameSize, 0);
+  return sheet;
 }
 
 // ---------------------------------------------------------------------------
@@ -402,6 +512,10 @@ save(buildCharacterSheet(drawGoose, drawGooseSwimming), 'public/assets/sprites/g
 save(buildCharacterSheet(drawPumpkin, drawPumpkinBubbles), 'public/assets/sprites/pumpkin.png');
 save(drawLampshade(), 'public/assets/sprites/lampshade.png');
 save(drawBear(), 'public/assets/sprites/bear.png');
+save(buildStrip(drawFish, 2, 8), 'public/assets/sprites/fish.png');
+save(buildStrip(drawWorm, 2, 16), 'public/assets/sprites/worm.png');
+save(buildStrip(drawMud, 3, 8), 'public/assets/sprites/mud.png');
+save(buildStrip(drawPiranha, 4, 16), 'public/assets/sprites/piranha.png');
 const built = buildTileset();
 save(built.sheet, 'public/assets/tiles/tileset.png');
 console.log(

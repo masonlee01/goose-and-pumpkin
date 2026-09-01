@@ -34,6 +34,16 @@ export class BootScene extends Phaser.Scene {
 
     // The polar bear - also just one picture. He stands still and watches.
     this.load.image('bear', 'assets/sprites/bear.png');
+
+    // Pond and meadow creatures - none of these have a physics body, they are
+    // just pictures nudged around by hand in Fish.ts / Worms.ts / Piranhas.ts.
+    this.load.spritesheet('fish', 'assets/sprites/fish.png', { frameWidth: 8, frameHeight: 8 });
+    this.load.spritesheet('worm', 'assets/sprites/worm.png', { frameWidth: 16, frameHeight: 16 });
+    this.load.spritesheet('mud', 'assets/sprites/mud.png', { frameWidth: 8, frameHeight: 8 });
+    this.load.spritesheet('piranha', 'assets/sprites/piranha.png', {
+      frameWidth: TILE_SIZE,
+      frameHeight: TILE_SIZE,
+    });
   }
 
   create() {

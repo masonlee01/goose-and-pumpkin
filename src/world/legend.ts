@@ -39,6 +39,7 @@ const BUSH = 5;
 const MUSHROOMS = 29;
 const SIGNPOST = 83;
 const FENCE = 82;
+const MUD_POT = 134; // we drew this ourselves too - see scripts/build-art.mjs
 
 export const LEGEND: Record<string, TileKind> = {
   // --- floors you can walk on ---
@@ -74,6 +75,12 @@ export const LEGEND: Record<string, TileKind> = {
   //     on top of this one instead. It is `solid` itself, which gives the bear
   //     a perfect one-tile hitbox for free, using collision that already exists. ---
   P: { ground: GRASS_TUFTY, solid: true, name: 'polar bear' },
+
+  // --- piranha plants: the mud pot is a permanent tile - it stays right where
+  //     it is even while the plant hiding inside it is popped down out of
+  //     sight. WorldScene stands an animated sprite on top that pops up and
+  //     down; NOT solid, so you can always just walk off one. ---
+  '!': { ground: GRASS_TUFTY, object: MUD_POT, name: 'piranha plant' },
 };
 
 /** The letter we fall back to if a map uses a letter that is not in the legend. */

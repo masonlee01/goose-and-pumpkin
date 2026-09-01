@@ -3,6 +3,9 @@ import meadowText from '../world/maps/meadow.txt?raw';
 import { loadMap, type LoadedMap } from '../world/loadMap';
 import { SIGNS } from '../world/signs';
 import { Player } from '../entities/Player';
+import { Fish } from '../entities/Fish';
+import { Worms } from '../entities/Worms';
+import { Piranhas } from '../entities/Piranhas';
 import { TwoPlayerCamera } from '../systems/camera';
 import { WaterSystem } from '../systems/water';
 import { playSound } from '../systems/sounds';
@@ -31,10 +34,14 @@ export class WorldScene extends Phaser.Scene {
   private pumpkin!: Player;
   private followCamera!: TwoPlayerCamera;
   private waterSystem!: WaterSystem;
+  private fish!: Fish;
+  private worms!: Worms;
+  private piranhas!: Piranhas;
   private lampShades: Phaser.Physics.Arcade.Sprite[] = [];
   private lampShadesFound = 0;
   private lampShadesTotal = 0;
   private bearSpots: Array<{ across: number; down: number }> = [];
+  private piranhaSpots: Array<{ across: number; down: number }> = [];
   private isNight = false;
 
   constructor() {
@@ -79,6 +86,10 @@ export class WorldScene extends Phaser.Scene {
     this.waterSystem = new WaterSystem(this, this.map, this.goose, this.pumpkin);
     this.spawnLampShades();
     this.spawnBears();
+    this.fish = new Fish(this, this.map, [this.goose, this.pumpkin]);
+    this.worms = new Worms(this, this.map);
+    this.piranhas = new Piranhas(this, this.map, [this.goose, this.pumpkin]);
+    this.piranhaSpots = this.map.spotsOf('!');
 
     this.followCamera = new TwoPlayerCamera(this, [this.goose, this.pumpkin]);
     this.followCamera.setBounds(this.map.widthInPixels, this.map.heightInPixels);
@@ -117,7 +128,7 @@ export class WorldScene extends Phaser.Scene {
     });
   }
 
-  update() {
+  update(time: number, delta: number) {
     // Runs first, so stepping into the pond slows Goose down on this same frame.
     this.waterSystem.update();
 
@@ -125,6 +136,11 @@ export class WorldScene extends Phaser.Scene {
       player.handleMovement();
       if (player.justPressedInteract()) this.doAction(player);
     }
+
+    this.fish.update(time, delta);
+    this.worms.update(time, delta);
+    this.piranhas.update();
+
     this.followCamera.update();
   }
 

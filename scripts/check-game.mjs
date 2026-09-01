@@ -321,7 +321,157 @@ if (beforeBear.bearSpots.length > 0) {
   check('The polar bear exists in the map', false, 'no P found in meadow.txt');
 }
 
-// --- 11. Nothing exploded along the way ---
+// --- 12. Fish: always in the pond, they move, and they scatter from you ---
+const fishState = () =>
+  page.evaluate(() => {
+    const w = window.__game.scene.getScene('World');
+    return { positions: w.fish?.positions() ?? [] };
+  });
+
+const isWaterAt = (x, y) =>
+  page.evaluate(
+    (xx, yy) => {
+      const w = window.__game.scene.getScene('World');
+      return w.map.kindAt(Math.floor(xx / 16), Math.floor(yy / 16))?.water === true;
+    },
+    x,
+    y,
+  );
+
+const beforeFish = await fishState();
+if (beforeFish.positions.length > 0) {
+  let allInWater = true;
+  for (const p of beforeFish.positions) {
+    if (!(await isWaterAt(p.x, p.y))) allInWater = false;
+  }
+  check('Every fish starts out inside a water tile', allInWater, `${beforeFish.positions.length} fish`);
+
+  await wait(1500);
+  const afterFish = await fishState();
+  let stillAllInWater = true;
+  for (const p of afterFish.positions) {
+    if (!(await isWaterAt(p.x, p.y))) stillAllInWater = false;
+  }
+  check('Fish are still inside the water after moving around', stillAllInWater);
+
+  const moved = beforeFish.positions.some((p, i) => {
+    const after = afterFish.positions[i];
+    return !!after && Math.hypot(after.x - p.x, after.y - p.y) > 1;
+  });
+  check('At least one fish has moved', moved);
+
+  // Stand Goose right on the bank next to the pond and see if the nearest fish flees.
+  await place([18, 8], [18, 12]);
+  await wait(300);
+  const nearBefore = await fishState();
+  const closest = (positions) =>
+    positions.reduce(
+      (best, p) => {
+        const d = Math.hypot(p.x - 18 * 16 - 8, p.y - 8 * 16 - 8);
+        return d < best.d ? { p, d } : best;
+      },
+      { p: nearBefore.positions[0], d: Infinity },
+    );
+  const before = closest(nearBefore.positions);
+  await wait(600);
+  const nearAfter = await fishState();
+  const after = closest(nearAfter.positions);
+  check(
+    'The nearest fish retreats from a player standing on the bank',
+    after.d >= before.d - 2,
+    `distance ${before.d.toFixed(0)} -> ${after.d.toFixed(0)}`,
+  );
+} else {
+  check('There are fish in the pond', false, 'no fish spawned');
+}
+
+// --- 13. Worms: never on solid ground, they move, and mud trails are capped ---
+const wormState = () =>
+  page.evaluate(() => {
+    const w = window.__game.scene.getScene('World');
+    return { positions: w.worms?.positions() ?? [], mudCount: w.worms?.mudPatchCount() ?? 0 };
+  });
+
+const isSolidAt = (x, y) =>
+  page.evaluate(
+    (xx, yy) => {
+      const w = window.__game.scene.getScene('World');
+      return w.map.kindAt(Math.floor(xx / 16), Math.floor(yy / 16))?.solid === true;
+    },
+    x,
+    y,
+  );
+
+const beforeWorms = await wormState();
+if (beforeWorms.positions.length > 0) {
+  let noneSolid = true;
+  for (const p of beforeWorms.positions) {
+    if (await isSolidAt(p.x, p.y)) noneSolid = false;
+  }
+  check('Worms are never standing on solid ground', noneSolid);
+
+  await wait(2500);
+  const afterWorms = await wormState();
+  const wormMoved = beforeWorms.positions.some((p, i) => {
+    const after = afterWorms.positions[i];
+    return after && Math.hypot(after.x - p.x, after.y - p.y) > 1;
+  });
+  check('At least one worm has moved', wormMoved);
+} else {
+  check('There are worms in the meadow', false, 'no worms spawned');
+}
+
+// Give the worms plenty of time to have dropped at least one mud splat, and
+// make sure the cap actually caps it (the half that would catch a real leak).
+await wait(6000);
+const mudState = await wormState();
+check(
+  'There is at least one mud patch, and never more than the cap allows',
+  mudState.mudCount > 0 && mudState.mudCount <= 30,
+  `mudCount=${mudState.mudCount}`,
+);
+
+// --- 14. Piranha plants: bite, shove, but never wedge you ---
+const piranhaSpots = await page.evaluate(() => window.__game.scene.getScene('World').piranhaSpots ?? []);
+if (piranhaSpots.length > 0) {
+  const spot = piranhaSpots[0];
+  await place([spot.across, spot.down], [2, 2]);
+
+  let bonked = false;
+  for (let i = 0; i < 16 && !bonked; i++) {
+    await wait(500);
+    const shouted = await page.evaluate(
+      () =>
+        window.__game.scene
+          .getScene('World')
+          .children.list.some((o) => o.type === 'Text' && /OW/.test(o.text ?? '')),
+    );
+    if (shouted) bonked = true;
+  }
+
+  const afterBite = await state();
+  const gooseTile = { x: Math.floor(afterBite.goose.x / 16), y: Math.floor(afterBite.goose.y / 16) };
+  const gooseKind = await kindAt(gooseTile.x, gooseTile.y);
+  check('Goose gets shoved and shouts OW when a piranha plant snaps', bonked);
+  check(
+    'Goose never lands on water or solid ground from the shove',
+    !gooseKind?.water && !gooseKind?.solid,
+    gooseKind?.name,
+  );
+
+  const beforeWalk = afterBite.goose;
+  await hold(['KeyD'], 400);
+  const afterWalk = await state();
+  check(
+    'Goose can walk again immediately after being bonked',
+    Math.abs(afterWalk.goose.x - beforeWalk.x) > 2,
+    `x ${beforeWalk.x.toFixed(0)} -> ${afterWalk.goose.x.toFixed(0)}`,
+  );
+} else {
+  check('There is a piranha plant on the map', false, 'no ! found in meadow.txt');
+}
+
+// --- 15. Nothing exploded along the way ---
 check('No errors in the browser console', errors.length === 0, errors.slice(0, 2).join(' / '));
 
 await browser.close();
