@@ -4,9 +4,11 @@ import { loadMap, type LoadedMap } from '../world/loadMap';
 import { SIGNS } from '../world/signs';
 import { Player } from '../entities/Player';
 import { TwoPlayerCamera } from '../systems/camera';
+import { WaterSystem } from '../systems/water';
 import {
   BOUNCE_TEXT,
   GOOSE_SPEED,
+  GOOSE_SWIM_SPEED,
   HONK_TEXT,
   PUMPKIN_SPEED,
   TILE_SIZE,
@@ -20,6 +22,7 @@ export class WorldScene extends Phaser.Scene {
   private goose!: Player;
   private pumpkin!: Player;
   private followCamera!: TwoPlayerCamera;
+  private waterSystem!: WaterSystem;
 
   constructor() {
     super('World');
@@ -36,6 +39,7 @@ export class WorldScene extends Phaser.Scene {
       key: 'goose',
       displayName: 'Goose',
       speed: GOOSE_SPEED,
+      swimSpeed: GOOSE_SWIM_SPEED,
       tagColour: '#ffffff',
       shoutText: HONK_TEXT,
       soundName: 'honk',
@@ -58,6 +62,8 @@ export class WorldScene extends Phaser.Scene {
     this.physics.add.collider(this.goose, this.pumpkin);
 
     this.setUpControls();
+
+    this.waterSystem = new WaterSystem(this, this.map, this.goose, this.pumpkin);
 
     this.followCamera = new TwoPlayerCamera(this, [this.goose, this.pumpkin]);
     this.followCamera.setBounds(this.map.widthInPixels, this.map.heightInPixels);
@@ -97,6 +103,9 @@ export class WorldScene extends Phaser.Scene {
   }
 
   update() {
+    // Runs first, so stepping into the pond slows Goose down on this same frame.
+    this.waterSystem.update();
+
     for (const player of [this.goose, this.pumpkin]) {
       player.handleMovement();
       if (player.justPressedInteract()) this.doAction(player);

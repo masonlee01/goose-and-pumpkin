@@ -24,6 +24,12 @@ export const HONK_TEXT = 'HONK!'; // what Goose shouts when you press F
 export const BOUNCE_TEXT = 'BOING!'; // what Pumpkin shouts when you press /
 export const SHOUT_TIME = 900; // how many milliseconds the shout stays on screen
 
+// --- The pond: Goose swims, Pumpkin sinks ------------------------------------
+export const GOOSE_SWIM_SPEED = 50; // Goose is slower in the water than on land
+export const SINK_TIME = 500; // milliseconds it takes Pumpkin to sink out of sight
+export const POP_TIME = 600; // milliseconds she stays out of sight before popping back up
+export const PHEW_TEXT = 'PHEW!'; // what Pumpkin shouts when she pops back up on the bank
+
 // --- Sound effects ------------------------------------------------------------
 // Every sound is invented on the spot by the computer - there are no sound
 // files anywhere in this project. Each one is a note that slides from pitch
@@ -38,6 +44,7 @@ export const SHOUT_TIME = 900; // how many milliseconds the shout stays on scree
 export const SOUNDS = {
   honk: { from: 220, to: 140, time: 220, shape: 'sawtooth', loud: 0.25 },
   boing: { from: 300, to: 550, time: 180, shape: 'square', loud: 0.2 },
+  phew: { from: 500, to: 750, time: 150, shape: 'sine', loud: 0.2 },
 };
 
 // --- The screen -------------------------------------------------------------

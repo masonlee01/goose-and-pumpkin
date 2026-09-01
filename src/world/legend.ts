@@ -3,10 +3,11 @@
 // =============================================================================
 //  This is the key that turns the letters in a map file into actual pictures.
 //
-//  Each letter says three things:
+//  Each letter says up to four things:
 //    ground - the picture painted on the floor (grass, dirt, water...)
 //    object - an optional thing standing on top of the floor (a tree, a sign...)
 //    solid  - true if Goose and Pumpkin should BUMP into it instead of walking through
+//    water  - true if it is a pond square: Goose can swim in it, Pumpkin sinks
 //
 //  The numbers are positions in public/assets/tiles/tileset.png, counting from
 //  the top-left corner, going left-to-right then down. The sheet is 12 across,
@@ -19,6 +20,7 @@ export type TileKind = {
   ground: number;
   object?: number;
   solid?: boolean;
+  water?: boolean;
   name: string;
 };
 
@@ -48,9 +50,9 @@ export const LEGEND: Record<string, TileKind> = {
   ',': { ground: DIRT_SPECKLED, name: 'path' },
   o: { ground: GRAVEL, name: 'gravel' },
 
-  // --- floors you CANNOT walk on ---
-  W: { ground: WATER, solid: true, name: 'water' },
-  w: { ground: WATER_SPARKLY, solid: true, name: 'sparkly water' },
+  // --- the pond: not solid any more, Goose swims in it and Pumpkin sinks ---
+  W: { ground: WATER, water: true, name: 'water' },
+  w: { ground: WATER_SPARKLY, water: true, name: 'sparkly water' },
 
   // --- things standing on the grass ---
   T: { ground: GRASS_TUFTY, object: TREE_GREEN, solid: true, name: 'tree' },

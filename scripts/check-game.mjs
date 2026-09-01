@@ -55,7 +55,13 @@ const state = () =>
     const w = window.__game.scene.getScene('World');
     const cam = w.cameras.main;
     return {
-      goose: { x: w.goose.x, y: w.goose.y, frame: Number(w.goose.frame.name), flip: w.goose.flipX },
+      goose: {
+        x: w.goose.x,
+        y: w.goose.y,
+        frame: Number(w.goose.frame.name),
+        flip: w.goose.flipX,
+        inWater: w.goose.inWater,
+      },
       pumpkin: { x: w.pumpkin.x, y: w.pumpkin.y },
       zoom: cam.zoom,
       shouts: w.children.list.filter((o) => o.type === 'Text' && /HONK|BOING/.test(o.text ?? ''))
@@ -69,6 +75,14 @@ const state = () =>
         .map((o) => o.text),
     };
   });
+
+/** What kind of tile (water? solid?) is at this tile position. */
+const kindAt = (across, down) =>
+  page.evaluate(
+    (a, d) => window.__game.scene.getScene('World').map.kindAt(a, d) ?? null,
+    across,
+    down,
+  );
 
 const place = (goose, pumpkin) =>
   page.evaluate(
@@ -101,16 +115,68 @@ check(
   `goose ${before.goose.x.toFixed(0)}->${after.goose.x.toFixed(0)}, pumpkin ${before.pumpkin.x.toFixed(0)}->${after.pumpkin.x.toFixed(0)}`,
 );
 
-// --- 2. Walking into the pond should stop you ---
-// Row 8 of the map has water from column 20 across. Start Goose just left of it.
+// --- 2. Goose can swim in the pond, but still can't swim through the trees ---
+// Row 8 of the map has water from column 20 to 29, then grass, then the tree
+// border at column 39. Walk Goose straight along it.
 await place([18, 8], [18, 12]);
-await hold(['KeyD'], 1500);
-const atWater = await state();
+await hold(['KeyD'], 2500);
+const swimming = await state();
 check(
-  'The pond blocks Goose instead of letting him swim off',
-  atWater.goose.x < 20 * 16,
-  `stopped at x=${atWater.goose.x.toFixed(0)}, water starts at x=320`,
+  'Goose swims into the pond instead of being blocked by it',
+  swimming.goose.x > 20 * 16 && swimming.goose.inWater === true,
+  `x=${swimming.goose.x.toFixed(0)}, inWater=${swimming.goose.inWater}`,
 );
+await hold(['KeyD'], 6000);
+const stillBlocked = await state();
+check(
+  'But the tree border on the far side still blocks him',
+  stillBlocked.goose.x < 39 * 16,
+  `stopped at x=${stillBlocked.goose.x.toFixed(0)}`,
+);
+
+// --- 2b. Pumpkin sinks when she steps in the pond, and always gets rescued ---
+const waitUntilDry = async (maxTries) => {
+  for (let i = 0; i < maxTries; i++) {
+    await wait(200);
+    const s = await state();
+    const kind = await kindAt(Math.floor(s.pumpkin.x / 16), Math.floor(s.pumpkin.y / 16));
+    if (!kind?.water) return { state: s, kind };
+  }
+  return undefined;
+};
+
+// Dropped dead centre of the pond BEFORE she has ever stood near a bank, so
+// there is no nearby remembered dry tile to fall back on - this is what
+// forces the ring-search in water.ts to actually run, not just the fast path.
+await place([18, 12], [25, 8]);
+const rescuedFromCentre = await waitUntilDry(25);
+check(
+  'Pumpkin is rescued even when placed dead centre of the pond',
+  !!rescuedFromCentre && !rescuedFromCentre.kind?.water && !rescuedFromCentre.kind?.solid,
+  rescuedFromCentre ? rescuedFromCentre.kind?.name : 'never rescued',
+);
+
+// Now the ordinary case: one tile from the bank, walking in under her own steam.
+await place([37, 14], [19, 8]);
+await hold(['ArrowRight'], 400);
+const rescued = await waitUntilDry(20);
+check('Pumpkin never stays wet - she comes back out of the pond', !!rescued);
+check(
+  'She lands on a tile that is neither water nor solid',
+  !!rescued && !rescued.kind?.water && !rescued.kind?.solid,
+  rescued ? rescued.kind?.name : 'never landed',
+);
+
+if (rescued) {
+  const beforeWalk = rescued.state.pumpkin;
+  await hold(['ArrowDown'], 400);
+  const afterWalk = await state();
+  check(
+    'Pumpkin can walk again straight after popping back up',
+    Math.abs(afterWalk.pumpkin.y - beforeWalk.y) > 2,
+    `y ${beforeWalk.y.toFixed(0)} -> ${afterWalk.pumpkin.y.toFixed(0)}`,
+  );
+}
 
 // --- 3. Walking into a tree should stop you ---
 // Column 39 of every row is the tree border down the right-hand edge.

@@ -19,7 +19,7 @@ export class BootScene extends Phaser.Scene {
     // The ground, trees, houses and water.
     this.load.image('tiles', 'assets/tiles/tileset.png');
 
-    // Our two heroes. Each picture file is a strip of 6 poses, 16x16 each.
+    // Our two heroes. Each picture file is a strip of poses, 16x16 each.
     this.load.spritesheet('goose', 'assets/sprites/goose.png', {
       frameWidth: TILE_SIZE,
       frameHeight: TILE_SIZE,

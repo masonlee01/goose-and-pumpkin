@@ -21,7 +21,6 @@ _(pick one of these at the start of a session)_
 - [ ] Switching from day to night by "honking" in front of a polar bear
 - [ ] add paranha plants
 - [ ] fish in the water
-- [ ] the goose can swim in the water, the pumpkin sinks under (sprite changes to air bubbles)
 - [ ] worms that walk around the map slowly and leave mud "poop" trails that slowly disappear
 
 ## Ideas from Dad
@@ -39,3 +38,4 @@ _(pick one of these at the start of a session)_
 - [x] Honking (`F`) and boinging (`/`)
 - [x] Signposts you can read
 - [x] Sound effects (a real honk)
+- [x] the goose can swim in the water, the pumpkin sinks under (sprite changes to air bubbles)

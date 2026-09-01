@@ -19,6 +19,8 @@ export type LoadedMap = {
   heightInPixels: number;
   /** Look up what is at a tile position, e.g. to read a sign. */
   kindAt: (tileX: number, tileY: number) => TileKind | undefined;
+  /** Every square where a particular letter appears, e.g. every 'L'. */
+  spotsOf: (letter: string) => Array<{ across: number; down: number }>;
 };
 
 /** Strip the human notes and blank lines, leaving just the picture. */
@@ -77,8 +79,11 @@ export function loadMap(scene: Phaser.Scene, mapText: string): LoadedMap {
   if (!objects) throw new Error('Could not build the objects layer.');
 
   // Mark the squares that Goose and Pumpkin should bump into. We put the
-  // collision on the GROUND layer for every solid letter, whether the solid
-  // thing is the floor itself (water) or an object standing on it (a tree).
+  // collision on the GROUND layer for every solid letter - that is trees,
+  // bushes, fences and signposts, the solid thing always being an object
+  // standing on the floor. Water is NOT in this list: it is not `solid`, it
+  // is `water`, and src/systems/water.ts is what does something special with
+  // it instead of just bumping into it.
   for (let y = 0; y < heightInTiles; y++) {
     for (let x = 0; x < widthInTiles; x++) {
       if (kinds[y][x].solid) {
@@ -95,5 +100,36 @@ export function loadMap(scene: Phaser.Scene, mapText: string): LoadedMap {
     widthInPixels: widthInTiles * TILE_SIZE,
     heightInPixels: heightInTiles * TILE_SIZE,
     kindAt: (tileX, tileY) => kinds[tileY]?.[tileX],
+    spotsOf: (letter) => {
+      const spots: Array<{ across: number; down: number }> = [];
+      for (let down = 0; down < heightInTiles; down++) {
+        for (let across = 0; across < widthInTiles; across++) {
+          if (rows[down][across] === letter) spots.push({ across, down });
+        }
+      }
+      return spots;
+    },
   };
+}
+
+/** Turn a spot in world dots into the tile kind underneath it. */
+function tileKindAt(map: LoadedMap, x: number, y: number): TileKind | undefined {
+  return map.kindAt(Math.floor(x / TILE_SIZE), Math.floor(y / TILE_SIZE));
+}
+
+/** Is this spot (in world dots) part of the pond? */
+export function isWaterAt(map: LoadedMap, x: number, y: number): boolean {
+  return tileKindAt(map, x, y)?.water === true;
+}
+
+/**
+ * Is this spot somewhere nobody should ever end up? Trees, bushes, fences and
+ * signposts - AND the pond, since water is no longer `solid` and a plain
+ * solid check would happily fling Pumpkin straight into it - and anywhere off
+ * the edge of the map, where kindAt has nothing to tell us at all.
+ */
+export function isDangerAt(map: LoadedMap, x: number, y: number): boolean {
+  const kind = tileKindAt(map, x, y);
+  if (!kind) return true;
+  return kind.solid === true || kind.water === true;
 }

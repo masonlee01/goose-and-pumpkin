@@ -37,7 +37,7 @@ Ctrl+S, and the game updates instantly. You do not need to restart anything.
 letter is one square of ground. Change the letters, save, and the world changes.
 
 ```
-g = grass          . = path           W = water (blocks you)
+g = grass          . = path           W = water (Goose swims, Pumpkin sinks!)
 f = flowers        , = path           T = tree  (blocks you)
 m = mushrooms      o = gravel         b = bush  (blocks you)
 s = signpost       F = fence

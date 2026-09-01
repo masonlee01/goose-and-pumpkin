@@ -217,11 +217,14 @@ function drawPumpkin(facing, step) {
 }
 
 // ---------------------------------------------------------------------------
-// Put the 6 poses of one character into a single strip.
-// Frame order:  0=down  1=down-step  2=up  3=up-step  4=side  5=side-step
+// Put the 8 poses of one character into a single strip.
+// Frame order: 0=down 1=down-step 2=up 3=up-step 4=side 5=side-step
+//              6=in the pond      7=in the pond, other step
+// Frames 0-5 keep their exact meanings so createAnimations never has to
+// change; the pond frames are added on the END.
 // ---------------------------------------------------------------------------
-function buildCharacterSheet(drawFn) {
-  const sheet = new Canvas(TILE * 6, TILE);
+function buildCharacterSheet(drawFn, drawSwimFn) {
+  const sheet = new Canvas(TILE * 8, TILE);
   let i = 0;
   for (const facing of ['down', 'up', 'side']) {
     for (const step of [0, 1]) {
@@ -229,7 +232,49 @@ function buildCharacterSheet(drawFn) {
       i++;
     }
   }
+  for (const step of [0, 1]) {
+    drawSwimFn(step).blitTo(sheet, i * TILE, 0);
+    i++;
+  }
   return sheet;
+}
+
+// ---------------------------------------------------------------------------
+// GOOSE, SWIMMING - just his top half poking up above a pale wake
+// ---------------------------------------------------------------------------
+function drawGooseSwimming(step) {
+  const c = new Canvas(TILE, TILE);
+  const bob = step === 1 ? -1 : 0;
+
+  // the wake first, so the goose is drawn floating on top of it
+  c.ellipse(8, 12, 6, 3, C.waterFoam);
+  c.ellipse(8, 12, 4.5, 2, C.waterMid);
+
+  c.rect(7, 6 + bob, 2, 5, C.gooseBody); // neck
+  c.ellipse(8, 5 + bob, 2.2, 1.8, C.gooseBody); // head
+  c.rect(7, 6 + bob, 2, 2, C.gooseBeak); // beak pointing at us
+  c.set(6, 4 + bob, C.gooseEye);
+  c.set(10, 4 + bob, C.gooseEye);
+
+  // outlined last, together with the wake, so the whole watery shape reads as one thing
+  c.addOutline();
+  return c;
+}
+
+// ---------------------------------------------------------------------------
+// PUMPKIN, SINKING - she is gone; just her bubbles rising to the surface
+// ---------------------------------------------------------------------------
+function drawPumpkinBubbles(step) {
+  const c = new Canvas(TILE, TILE);
+  const rise = step === 1 ? -1 : 0;
+
+  c.ellipse(6, 11 + rise, 1.3, 1.3, C.waterFoam);
+  c.ellipse(10, 8 + rise, 1, 1, C.waterFoam);
+  c.ellipse(8, 5 + rise, 1.6, 1.6, C.waterFoam);
+
+  // outlined in watery blue, not black - these are bubbles, not a character
+  c.addOutline(C.waterDeep);
+  return c;
 }
 
 // ---------------------------------------------------------------------------
@@ -298,8 +343,8 @@ function buildFavicon() {
 // ---------------------------------------------------------------------------
 console.log('Drawing the pictures for Goose and Pumpkin...');
 save(buildFavicon(), 'public/favicon.png');
-save(buildCharacterSheet(drawGoose), 'public/assets/sprites/goose.png');
-save(buildCharacterSheet(drawPumpkin), 'public/assets/sprites/pumpkin.png');
+save(buildCharacterSheet(drawGoose, drawGooseSwimming), 'public/assets/sprites/goose.png');
+save(buildCharacterSheet(drawPumpkin, drawPumpkinBubbles), 'public/assets/sprites/pumpkin.png');
 const built = buildTileset();
 save(built.sheet, 'public/assets/tiles/tileset.png');
 console.log(

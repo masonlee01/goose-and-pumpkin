@@ -24,6 +24,7 @@ export type PlayerOptions = {
   key: string; // which picture file to use, e.g. 'goose'
   displayName: string; // the name shown floating above them
   speed: number;
+  swimSpeed?: number; // how fast they move while in the pond, if different
   tagColour: string;
   shoutText: string;
   soundName: string; // which SOUNDS entry in config.ts plays when they shout
@@ -34,6 +35,17 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   private controls!: Controls;
   private nameTag?: Phaser.GameObjects.Text;
   private shout?: Phaser.GameObjects.Text;
+
+  /**
+   * While something else is moving us - sinking in the pond, or (one day)
+   * being shoved by a piranha plant - the keys do nothing for a fraction of
+   * a second. It is a TIME, not a switch, so it always wears off by itself.
+   * That is what makes it impossible to get stuck.
+   */
+  heldStillUntil = 0;
+
+  /** Set every frame by src/systems/water.ts. True while standing in the pond. */
+  inWater = false;
 
   constructor(scene: Phaser.Scene, x: number, y: number, options: PlayerOptions) {
     super(scene, x, y, options.key, 0);
@@ -83,6 +95,18 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         repeat: -1,
       });
     }
+
+    // Frames 6 and 7 are whatever this character looks like in the pond -
+    // Goose swimming, Pumpkin bubbling. See scripts/build-art.mjs.
+    const swimKey = `${key}-swim`;
+    if (!scene.anims.exists(swimKey)) {
+      scene.anims.create({
+        key: swimKey,
+        frames: [{ key, frame: 6 }, { key, frame: 7 }],
+        frameRate: WALK_FRAME_RATE,
+        repeat: -1,
+      });
+    }
   }
 
   setControls(controls: Controls) {
@@ -94,6 +118,14 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     const body = this.body as Phaser.Physics.Arcade.Body;
     const c = this.controls;
 
+    // Something else has taken the keys away for a moment - e.g. sinking in
+    // the pond. Just sit tight until the timestamp above wears off.
+    if (this.scene.time.now < this.heldStillUntil) {
+      body.setVelocity(0, 0);
+      this.followWithNameTag();
+      return;
+    }
+
     let vx = 0;
     let vy = 0;
     if (c.left.isDown) vx -= 1;
@@ -101,16 +133,22 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     if (c.up.isDown) vy -= 1;
     if (c.down.isDown) vy += 1;
 
+    const speed = this.inWater ? (this.options.swimSpeed ?? this.options.speed) : this.options.speed;
+
     // Without this, walking diagonally would be faster than walking straight.
     const length = Math.hypot(vx, vy);
     if (length > 0) {
-      vx = (vx / length) * this.options.speed;
-      vy = (vy / length) * this.options.speed;
+      vx = (vx / length) * speed;
+      vy = (vy / length) * speed;
     }
     body.setVelocity(vx, vy);
 
     const key = this.options.key;
-    if (length === 0) {
+    if (this.inWater) {
+      // One look, in or out of the pond, no matter which way they are facing -
+      // this is a top-down swim, not a walk.
+      this.anims.play(`${key}-swim`, true);
+    } else if (length === 0) {
       this.anims.stop();
       // Stand still in the pose we were last facing.
       const frame = Number(this.frame.name);
