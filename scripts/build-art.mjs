@@ -41,6 +41,9 @@ const C = {
   lampShade: '#f5e6c8',
   lampShadeShade: '#e0c896',
   lampShadeRim: '#c9a45e',
+  bearBody: '#f7f7f2',
+  bearShade: '#dcdcd2',
+  bearNose: '#2d1b2e',
 };
 
 // ---------------------------------------------------------------------------
@@ -304,6 +307,32 @@ function drawLampshade() {
 }
 
 // ---------------------------------------------------------------------------
+// POLAR BEAR - taller than one tile, so he looks properly big and stands
+// still watching the meadow. Facing us, no walking poses - he never moves.
+// ---------------------------------------------------------------------------
+function drawBear() {
+  const c = new Canvas(TILE, TILE * 1.5); // 16x24 - one and a half tiles tall
+
+  c.ellipse(6, 22, 2, 1.4, C.bearShade); // feet
+  c.ellipse(10, 22, 2, 1.4, C.bearShade);
+
+  c.ellipse(8, 15, 6, 8, C.bearBody); // body
+  c.ellipse(9, 16, 4.5, 6, C.bearShade); // shaded side
+
+  c.ellipse(4, 3, 2, 2, C.bearBody); // ears
+  c.ellipse(12, 3, 2, 2, C.bearBody);
+
+  c.ellipse(8, 6, 5, 4.5, C.bearBody); // head
+  c.ellipse(8, 8, 2.6, 2.2, C.bearShade); // snout patch
+  c.rect(7, 8, 2, 1, C.bearNose); // nose
+  c.set(5, 5, C.bearNose); // eyes
+  c.set(11, 5, C.bearNose);
+
+  c.addOutline();
+  return c;
+}
+
+// ---------------------------------------------------------------------------
 // WATER - Kenney's Tiny Town pack has no water, so we draw our own
 // ---------------------------------------------------------------------------
 function drawWater(variant) {
@@ -372,6 +401,7 @@ save(buildFavicon(), 'public/favicon.png');
 save(buildCharacterSheet(drawGoose, drawGooseSwimming), 'public/assets/sprites/goose.png');
 save(buildCharacterSheet(drawPumpkin, drawPumpkinBubbles), 'public/assets/sprites/pumpkin.png');
 save(drawLampshade(), 'public/assets/sprites/lampshade.png');
+save(drawBear(), 'public/assets/sprites/bear.png');
 const built = buildTileset();
 save(built.sheet, 'public/assets/tiles/tileset.png');
 console.log(

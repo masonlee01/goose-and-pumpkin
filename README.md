@@ -42,6 +42,7 @@ f = flowers        , = path           T = tree  (blocks you)
 m = mushrooms      o = gravel         b = bush  (blocks you)
 s = signpost       F = fence          L = lamp shade to find (on grass)
                                        l = lamp shade to find (floating in water)
+                                       P = polar bear (honk near him for night!)
 ```
 
 The full list lives in `src/world/legend.ts`, and what the signs say lives in

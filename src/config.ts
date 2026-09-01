@@ -38,6 +38,11 @@ export const LAMP_SHADE_BOB_TIME = 900; // milliseconds for one up-and-down bob
 export const LAMP_SHADE_POP_TIME = 300; // milliseconds the pop-and-vanish animation takes when you grab one
 export const LAMP_SHADE_SPARKLE_COUNT = 7; // how many little sparkles ring a lamp shade when you grab it
 
+// --- The polar bear: honk near him to flip day and night ---------------------
+export const BEAR_HONK_DISTANCE = 28; // how close you need to stand to honk at the bear
+export const NIGHT_ALPHA = 0.6; // how dark it gets at night (0 = no change, 1 = pitch black)
+export const NIGHT_FADE_TIME = 800; // milliseconds the day/night transition takes
+
 // --- Sound effects ------------------------------------------------------------
 // Every sound is invented on the spot by the computer - there are no sound
 // files anywhere in this project. Each one is a note that slides from pitch
@@ -54,6 +59,7 @@ export const SOUNDS = {
   boing: { from: 300, to: 550, time: 180, shape: 'square', loud: 0.2 },
   phew: { from: 500, to: 750, time: 150, shape: 'sine', loud: 0.2 },
   pickup: { from: 500, to: 900, time: 200, shape: 'triangle', loud: 0.22 },
+  growl: { from: 150, to: 90, time: 260, shape: 'sawtooth', loud: 0.25 },
 };
 
 // --- The screen -------------------------------------------------------------

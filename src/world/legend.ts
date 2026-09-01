@@ -69,6 +69,11 @@ export const LEGEND: Record<string, TileKind> = {
   //     say what plain ground goes underneath it. ---
   L: { ground: GRASS_TUFTY, name: 'grass with a lamp shade' },
   l: { ground: WATER_SPARKLY, water: true, name: 'floating lamp shade' },
+
+  // --- the polar bear: no object tile either, WorldScene stands a tall sprite
+  //     on top of this one instead. It is `solid` itself, which gives the bear
+  //     a perfect one-tile hitbox for free, using collision that already exists. ---
+  P: { ground: GRASS_TUFTY, solid: true, name: 'polar bear' },
 };
 
 /** The letter we fall back to if a map uses a letter that is not in the legend. */

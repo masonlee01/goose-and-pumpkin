@@ -285,7 +285,43 @@ if (afterLamp.total > 0 && afterLamp.found === afterLamp.total) {
   );
 }
 
-// --- 10. Nothing exploded along the way ---
+// --- 10. The polar bear: honk near him and the sun goes to bed ---
+const bearState = () =>
+  page.evaluate(() => {
+    const w = window.__game.scene.getScene('World');
+    const ui = window.__game.scene.getScene('UI');
+    return { isNight: w.isNight, nightAlpha: ui.nightSheet?.alpha ?? 0, bearSpots: w.bearSpots ?? [] };
+  });
+
+const beforeBear = await bearState();
+if (beforeBear.bearSpots.length > 0) {
+  const spot = beforeBear.bearSpots[0];
+  // Stand Goose right next to the bear (never on him - his tile is solid) and honk.
+  await place([spot.across, spot.down + 1], [2, 2]);
+  await wait(200);
+  await hold(['KeyF'], 150);
+  await wait(1000);
+  const night = await bearState();
+  const nightUi = await state();
+  check(
+    'Honking near the polar bear turns night on',
+    night.isNight === true && night.nightAlpha > 0.2 && nightUi.soundsPlayed.includes('growl'),
+    `isNight=${night.isNight}, alpha=${night.nightAlpha.toFixed(2)}`,
+  );
+
+  await hold(['KeyF'], 150);
+  await wait(1000);
+  const day = await bearState();
+  check(
+    'Honking near him again turns it back to day',
+    day.isNight === false && day.nightAlpha < 0.05,
+    `isNight=${day.isNight}, alpha=${day.nightAlpha.toFixed(2)}`,
+  );
+} else {
+  check('The polar bear exists in the map', false, 'no P found in meadow.txt');
+}
+
+// --- 11. Nothing exploded along the way ---
 check('No errors in the browser console', errors.length === 0, errors.slice(0, 2).join(' / '));
 
 await browser.close();

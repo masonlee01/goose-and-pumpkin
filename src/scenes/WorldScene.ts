@@ -5,7 +5,9 @@ import { SIGNS } from '../world/signs';
 import { Player } from '../entities/Player';
 import { TwoPlayerCamera } from '../systems/camera';
 import { WaterSystem } from '../systems/water';
+import { playSound } from '../systems/sounds';
 import {
+  BEAR_HONK_DISTANCE,
   BOUNCE_TEXT,
   GOOSE_SPEED,
   GOOSE_SWIM_SPEED,
@@ -32,6 +34,8 @@ export class WorldScene extends Phaser.Scene {
   private lampShades: Phaser.Physics.Arcade.Sprite[] = [];
   private lampShadesFound = 0;
   private lampShadesTotal = 0;
+  private bearSpots: Array<{ across: number; down: number }> = [];
+  private isNight = false;
 
   constructor() {
     super('World');
@@ -74,6 +78,7 @@ export class WorldScene extends Phaser.Scene {
 
     this.waterSystem = new WaterSystem(this, this.map, this.goose, this.pumpkin);
     this.spawnLampShades();
+    this.spawnBears();
 
     this.followCamera = new TwoPlayerCamera(this, [this.goose, this.pumpkin]);
     this.followCamera.setBounds(this.map.widthInPixels, this.map.heightInPixels);
@@ -124,16 +129,25 @@ export class WorldScene extends Phaser.Scene {
   }
 
   /**
-   * What happens when someone presses their action key. If they are standing
-   * next to a signpost they read it; otherwise they just shout.
+   * What happens when someone presses their action key: sign, then bear,
+   * then just a shout. Keep this a flat ladder of ifs with early returns -
+   * three branches is a list, not a dispatch problem, so resist turning it
+   * into anything cleverer as more things get added here.
    */
   private doAction(player: Player) {
     const sign = this.nearbySign(player);
     if (sign) {
       this.events.emit('show-message', sign.says);
-    } else {
-      player.say();
+      return;
     }
+
+    const bear = this.nearbyBear(player);
+    if (bear) {
+      this.toggleNight(player);
+      return;
+    }
+
+    player.say();
   }
 
   private nearbySign(player: Player) {
@@ -142,6 +156,33 @@ export class WorldScene extends Phaser.Scene {
       const y = sign.down * TILE_SIZE + TILE_SIZE / 2;
       return Phaser.Math.Distance.Between(player.x, player.y, x, y) < READING_DISTANCE;
     });
+  }
+
+  private nearbyBear(player: Player) {
+    return this.bearSpots.find((spot) => {
+      const x = spot.across * TILE_SIZE + TILE_SIZE / 2;
+      const y = spot.down * TILE_SIZE + TILE_SIZE / 2;
+      return Phaser.Math.Distance.Between(player.x, player.y, x, y) < BEAR_HONK_DISTANCE;
+    });
+  }
+
+  /** A `P` stands a bear sprite at the bottom of his tile; the tile itself is `solid`. */
+  private spawnBears() {
+    this.bearSpots = this.map.spotsOf('P');
+
+    for (const spot of this.bearSpots) {
+      const x = spot.across * TILE_SIZE + TILE_SIZE / 2;
+      const y = spot.down * TILE_SIZE + TILE_SIZE;
+      this.add.image(x, y, 'bear').setOrigin(0.5, 1).setDepth(9);
+    }
+  }
+
+  /** Honk near a bear and the sun goes to bed; honk again and it comes back. */
+  private toggleNight(player: Player) {
+    player.say(); // their own honk or boing, same as always
+    playSound('growl'); // the bear, growling back
+    this.isNight = !this.isNight;
+    this.events.emit('night', this.isNight);
   }
 
   // ---------------------------------------------------------------------
@@ -154,11 +195,13 @@ export class WorldScene extends Phaser.Scene {
   //   show-message            | text           | reading a sign, or finding
   //                           |                | the very last lamp shade
   //   lamp-shades              | found, total   | a lamp shade is picked up
+  //   night                    | on: boolean    | the bear flips the sun
   //
   // WorldScene.create() finishes before UIScene.create() runs, so anything
   // emitted while the world is being built is shouted into an empty room.
   // UIScene therefore PULLS the opening numbers via getLampShadeCounts() when
-  // it wakes, and LISTENS for `lamp-shades` after that for updates.
+  // it wakes, and LISTENS for `lamp-shades` and `night` after that for
+  // updates. Night needs no pull - it always starts as day.
   // ---------------------------------------------------------------------
 
   /** L and l in the map become sprites, not tiles, because only a sprite can bob and pop. */

@@ -31,6 +31,9 @@ export class BootScene extends Phaser.Scene {
 
     // A lamp shade to find - just one picture, it doesn't walk anywhere.
     this.load.image('lampshade', 'assets/sprites/lampshade.png');
+
+    // The polar bear - also just one picture. He stands still and watches.
+    this.load.image('bear', 'assets/sprites/bear.png');
   }
 
   create() {
